@@ -1,0 +1,53 @@
+#Arquivo onde declara cada image do docker, suas configurações e seus volumes
+version: '3'
+
+services:
+
+  back:
+    build:
+        context: ./back-end
+        dockerfile: ./Dockerfile
+    volumes:
+      - '/app/node_modules'
+      - './back-end:/app'
+    depends_on:
+      - postgres-db
+    networks:
+      - app-connect
+    ports:
+      - '3333:3333'
+
+  react:
+        build:
+            context: ./front-end
+            dockerfile: ./Dockerfile
+        volumes:
+            - '/app/node_modules'
+            - './front-end:/app'
+        ports:
+            - '3001:3000'
+        environment:
+            - NODE_ENV=development
+        links:
+            - "back"
+
+
+  postgres-db:
+    container_name: postgres-db
+    image: postgres:11
+    restart: unless-stopped
+    volumes:
+      - postgres-db-data:/data
+    environment: 
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS} 
+    networks:
+      - app-connect
+
+volumes:
+  postgres-db-data:
+
+networks:
+  app-connect:
+      driver: bridge
